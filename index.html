@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Confessin Finance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="shortcut icon" href="https://files.catbox.moe/yw1vlz.jpg" type="image/x-icon" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pastel-pink': '#FADADD',
+                        'coral-red': '#E95A6B',
+                        'pink-light': '#ffe0e0',
+                        'pink-dark': '#c4485a'
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom, #FADADD 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #E95A6B 0%, #c4485a 100%);
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, #E95A6B 0%, #c4485a 100%);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .card {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(233, 90, 107, 0.2);
+        }
+
+        .calculator-btn {
+            transition: all 0.2s ease;
+        }
+
+        .calculator-btn:active {
+            transform: scale(0.95);
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+.slider-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(233, 90, 107, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+        }
+
+        .slider-item {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .slider-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slider-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+            padding: 2rem;
+            color: white;
+        }
+
+        .slider-dots {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .slider-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider-dot.active {
+            background: white;
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="p-6">
+            <!-- Profile Section -->
+            <div class="text-center mb-8 pb-6 border-b border-white border-opacity-20">
+                <img src="https://files.catbox.moe/yw1vlz.jpg" alt="Profile" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-white shadow-lg">
+                <h3 class="text-white font-bold text-xl">Selamat Datang!</h3>
+                <p class="text-pink-light text-sm">Admin User</p>
+            </div>
+
+            <!-- Menu Items -->
+            <nav class="space-y-2">
+                <a href="#" onclick="showSection('dashboard')" class="flex items-center space-x-3 text-white hover:bg-white hover:bg-opacity-20 p-3 rounded-lg transition-all">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" onclick="showSection('calculator')" class="flex items-center space-x-3 text-white hover:bg-white hover:bg-opacity-20 p-3 rounded-lg transition-all">
+                    <i class="fas fa-calculator w-5"></i>
+                    <span>Kalkulator</span>
+                </a>
+                <a href="#" onclick="showSection('savings')" class="flex items-center space-x-3 text-white hover:bg-white hover:bg-opacity-20 p-3 rounded-lg transition-all">
+                    <i class="fas fa-piggy-bank w-5"></i>
+                    <span>Tabungan Wishlist</span>
+                </a>
+                <a href="#" onclick="logout()" class="flex items-center space-x-3 text-white hover:bg-white hover:bg-opacity-20 p-3 rounded-lg transition-all">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Keluar</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="min-h-screen">
+        <!-- Top Navbar -->
+        <nav class="gradient-bg shadow-xl p-4 sticky top-0 z-50">
+            <div class="container mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-white font-bold text-xl">Tabunganku</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-white text-sm hidden sm:block" id="currentDate"></span>
+                    <button onclick="logout()" class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+<!-- Dashboard Section -->
+        <div id="dashboardSection" class="container mx-auto px-4 py-8">
+            <!-- Image Slider -->
+            <div class="slider-container" id="imageSlider">
+                <div class="slider-wrapper" id="sliderWrapper">
+                    <div class="slider-item">
+                        <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=1200&h=675&fit=crop" alt="Finance 1">
+                        <div class="slider-overlay">
+                            <h3 class="text-2xl font-bold mb-2">Kelola Keuangan Anda</h3>
+                            <p class="text-sm opacity-90">Rencanakan masa depan finansial yang lebih baik</p>
+                        </div>
+                    </div>
+                    <div class="slider-item">
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&h=675&fit=crop" alt="Finance 2">
+                        <div class="slider-overlay">
+                            <h3 class="text-2xl font-bold mb-2">Tabungan Wishlist</h3>
+                            <p class="text-sm opacity-90">Wujudkan impian dengan menabung terencana</p>
+                        </div>
+                    </div>
+                    <div class="slider-item">
+                        <img src="https://images.unsplash.com/photo-1633158829875-e5316a358c6f?w=1200&h=675&fit=crop" alt="Finance 3">
+                        <div class="slider-overlay">
+                            <h3 class="text-2xl font-bold mb-2">Kalkulator Praktis</h3>
+                            <p class="text-sm opacity-90">Hitung pengeluaran dengan mudah dan cepat</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slider-dots" id="sliderDots"></div>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2 float-animation">Dashboard</h2>
+                <p class="text-gray-600">Kelola keuangan Anda dengan mudah</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <!-- Quick Access: Calculator -->
+                <div class="card rounded-3xl p-6 shadow-xl cursor-pointer shimmer" onclick="showSection('calculator')">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center pulse-animation">
+                            <i class="fas fa-calculator text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Kalkulator</h3>
+                            <p class="text-gray-600 text-sm">Hitung pengeluaran Anda</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Access: Savings -->
+                <div class="card rounded-3xl p-6 shadow-xl cursor-pointer shimmer" onclick="showSection('savings')">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center pulse-animation">
+                            <i class="fas fa-piggy-bank text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Tabungan</h3>
+                            <p class="text-gray-600 text-sm">Kelola wishlist tabungan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="card rounded-3xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-gray-600 font-semibold">Total Tabungan</h4>
+                        <i class="fas fa-wallet text-coral-red text-2xl pulse-animation"></i>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800" id="totalSavings">Rp 0</p>
+                </div>
+
+                <div class="card rounded-3xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-gray-600 font-semibold">Target Tercapai</h4>
+                        <i class="fas fa-check-circle text-green-500 text-2xl pulse-animation"></i>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800" id="completedGoals">0</p>
+                </div>
+
+                <div class="card rounded-3xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-gray-600 font-semibold">Sedang Berjalan</h4>
+                        <i class="fas fa-hourglass-half text-blue-500 text-2xl pulse-animation"></i>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800" id="ongoingGoals">0</p>
+                </div>
+            </div>
+        </div>
+        <!-- Calculator Section -->
+        <div id="calculatorSection" class="container mx-auto px-4 py-8 hidden">
+            <div class="mb-8">
+                <button onclick="showSection('dashboard')" class="text-coral-red hover:underline mb-4">
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali
+                </button>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Kalkulator</h2>
+                <p class="text-gray-600">Hitung pengeluaran dan pemasukan Anda</p>
+            </div>
+
+            <div class="max-w-md mx-auto">
+                <div class="card rounded-3xl p-8 shadow-xl">
+                    <!-- Display -->
+                    <div class="bg-gray-100 rounded-2xl p-6 mb-6">
+                        <input type="text" id="calcDisplay" value="0" readonly class="w-full text-right text-3xl font-bold text-gray-800 bg-transparent outline-none">
+                    </div>
+
+                    <!-- Calculator Buttons -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <button onclick="clearCalc()" class="calculator-btn bg-red-500 hover:bg-red-600 text-white p-4 rounded-xl font-bold text-lg">C</button>
+                        <button onclick="deleteCalc()" class="calculator-btn bg-gray-300 hover:bg-gray-400 text-gray-800 p-4 rounded-xl font-bold text-lg">←</button>
+                        <button onclick="appendCalc('%')" class="calculator-btn bg-gray-300 hover:bg-gray-400 text-gray-800 p-4 rounded-xl font-bold text-lg">%</button>
+                        <button onclick="appendCalc('/')" class="calculator-btn gradient-bg hover:opacity-90 text-white p-4 rounded-xl font-bold text-lg">÷</button>
+
+                        <button onclick="appendCalc('7')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">7</button>
+                        <button onclick="appendCalc('8')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">8</button>
+                        <button onclick="appendCalc('9')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">9</button>
+                        <button onclick="appendCalc('*')" class="calculator-btn gradient-bg hover:opacity-90 text-white p-4 rounded-xl font-bold text-lg">×</button>
+
+                        <button onclick="appendCalc('4')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">4</button>
+                        <button onclick="appendCalc('5')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">5</button>
+                        <button onclick="appendCalc('6')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">6</button>
+                        <button onclick="appendCalc('-')" class="calculator-btn gradient-bg hover:opacity-90 text-white p-4 rounded-xl font-bold text-lg">−</button>
+
+                        <button onclick="appendCalc('1')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">1</button>
+                        <button onclick="appendCalc('2')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">2</button>
+                        <button onclick="appendCalc('3')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">3</button>
+                        <button onclick="appendCalc('+')" class="calculator-btn gradient-bg hover:opacity-90 text-white p-4 rounded-xl font-bold text-lg">+</button>
+
+                        <button onclick="appendCalc('0')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow col-span-2">0</button>
+                        <button onclick="appendCalc('.')" class="calculator-btn bg-white hover:bg-gray-100 text-gray-800 p-4 rounded-xl font-bold text-lg shadow">.</button>
+                        <button onclick="calculateCalc()" class="calculator-btn bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl font-bold text-lg">=</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Savings Section -->
+        <div id="savingsSection" class="container mx-auto px-4 py-8 hidden">
+            <div class="mb-8">
+                <button onclick="showSection('dashboard')" class="text-coral-red hover:underline mb-4">
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali
+                </button>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Tabungan Wishlist</h2>
+                        <p class="text-gray-600">Kelola target tabungan Anda</p>
+                    </div>
+                    <button onclick="openSavingModal()" class="gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>Tabungan Baru
+                    </button>
+                </div>
+            </div>
+
+            <!-- Savings List -->
+            <div id="savingsList" class="grid md:grid-cols-2 gap-6">
+                <!-- Savings cards will be added here dynamically -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-16">
+                <i class="fas fa-piggy-bank text-gray-300 text-6xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">Belum Ada Tabungan</h3>
+                <p class="text-gray-500 mb-6">Mulai buat tabungan wishlist pertama Anda!</p>
+                <button onclick="openSavingModal()" class="gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg">
+                    <i class="fas fa-plus mr-2"></i>Buat Tabungan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add New Saving -->
+    <div class="modal" id="savingModal">
+        <div class="modal-content p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">Tabungan Baru</h3>
+                <button onclick="closeSavingModal()" class="text-gray-500 hover:text-gray-800">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <form onsubmit="addSaving(event)">
+                <!-- Nama Tabungan -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-tag text-coral-red mr-2"></i>Nama Tabungan
+                    </label>
+                    <input type="text" id="savingName" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-coral-red focus:outline-none" placeholder="Contoh: iPhone 15 Pro">
+                </div>
+
+                <!-- Target Jumlah -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-money-bill-wave text-coral-red mr-2"></i>Target Jumlah (Juta Rupiah)
+                    </label>
+                    <input type="number" id="savingTarget" required min="0.1" step="0.1" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-coral-red focus:outline-none" placeholder="Contoh: 15">
+                </div>
+
+                <!-- Periode Menabung -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-calendar text-coral-red mr-2"></i>Periode Menabung
+                    </label>
+                    <select id="savingPeriod" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-coral-red focus:outline-none">
+                        <option value="">Pilih Periode</option>
+                        <option value="daily">Harian</option>
+                        <option value="weekly">Mingguan</option>
+                        <option value="monthly">Bulanan</option>
+                    </select>
+                </div>
+
+                <!-- Jumlah Per Periode -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-coins text-coral-red mr-2"></i>Jumlah Menabung Per Periode (Ribu Rupiah)
+                    </label>
+                    <input type="number" id="savingAmount" required min="1" step="1" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-coral-red focus:outline-none" placeholder="Contoh: 50">
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeSavingModal()" class="flex-1 bg-gray-300 text-gray-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-400 transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="flex-1 gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Money to Saving -->
+    <div class="modal" id="addMoneyModal">
+        <div class="modal-content p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">Tambah Uang</h3>
+                <button onclick="closeAddMoneyModal()" class="text-gray-500 hover:text-gray-800">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <form onsubmit="addMoney(event)">
+                <input type="hidden" id="selectedSavingId">
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-money-bill-wave text-coral-red mr-2"></i>Jumlah Uang (Ribu Rupiah)
+                    </label>
+                    <input type="number" id="addMoneyAmount" required min="1" step="1" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-coral-red focus:outline-none" placeholder="Contoh: 50">
+                </div>
+
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeAddMoneyModal()" class="flex-1 bg-gray-300 text-gray-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-400 transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="flex-1 gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>Tambah
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let savings = [];
+        let currentSection = 'dashboard';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavings();
+            updateDashboardStats();
+            updateCurrentDate();
+            renderSavings();
+        });
+
+        // Update current date
+        function updateCurrentDate() {
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const now = new Date();
+            const dayName = days[now.getDay()];
+            const date = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            document.getElementById('currentDate').textContent = `${dayName}, ${date} ${monthName} ${year}`;
+        }
+
+        // Sidebar Functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        // Section Navigation
+        function showSection(section) {
+            currentSection = section;
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('calculatorSection').classList.add('hidden');
+            document.getElementById('savingsSection').classList.add('hidden');
+            
+            if (section === 'dashboard') {
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                updateDashboardStats();
+            } else if (section === 'calculator') {
+                document.getElementById('calculatorSection').classList.remove('hidden');
+            } else if (section === 'savings') {
+                document.getElementById('savingsSection').classList.remove('hidden');
+                renderSavings();
+            }
+            
+            closeSidebar();
+        }
+
+        // Calculator Functions
+        function appendCalc(value) {
+            const display = document.getElementById('calcDisplay');
+            if (display.value === '0' || display.value === 'Error') {
+                display.value = value;
+            } else {
+                display.value += value;
+            }
+        }
+
+        function clearCalc() {
+            document.getElementById('calcDisplay').value = '0';
+        }
+
+        function deleteCalc() {
+            const display = document.getElementById('calcDisplay');
+            if (display.value.length > 1) {
+                display.value = display.value.slice(0, -1);
+            } else {
+                display.value = '0';
+            }
+        }
+
+        function calculateCalc() {
+            const display = document.getElementById('calcDisplay');
+            try {
+                display.value = eval(display.value.replace('×', '*').replace('÷', '/'));
+            } catch (error) {
+                display.value = 'Error';
+            }
+        }
+
+        // Savings Functions
+        function loadSavings() {
+            const stored = JSON.parse(localStorage.getItem('savings') || '[]');
+            savings = stored;
+        }
+
+        function saveSavings() {
+            localStorage.setItem('savings', JSON.stringify(savings));
+        }
+
+        function openSavingModal() {
+            document.getElementById('savingModal').classList.add('active');
+        }
+
+        function closeSavingModal() {
+            document.getElementById('savingModal').classList.remove('active');
+            document.getElementById('savingName').value = '';
+            document.getElementById('savingTarget').value = '';
+            document.getElementById('savingPeriod').value = '';
+            document.getElementById('savingAmount').value = '';
+        }
+
+        function addSaving(event) {
+            event.preventDefault();
+            
+            const saving = {
+                id: Date.now(),
+                name: document.getElementById('savingName').value,
+                target: parseFloat(document.getElementById('savingTarget').value) * 1000000,
+                period: document.getElementById('savingPeriod').value,
+                amount: parseFloat(document.getElementById('savingAmount').value) * 1000,
+                current: 0,
+                createdAt: new Date().toISOString()
+            };
+            
+            savings.push(saving);
+            saveSavings();
+            closeSavingModal();
+            renderSavings();
+            updateDashboardStats();
+            
+            // Show success message
+            alert('Tabungan berhasil ditambahkan!');
+        }
+
+        function renderSavings() {
+            const list = document.getElementById('savingsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (savings.length === 0) {
+                list.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                list.innerHTML = savings.map(saving => {
+                    const progress = (saving.current / saving.target) * 100;
+                    const periodText = {
+                        'daily': 'Harian',
+                        'weekly': 'Mingguan',
+                        'monthly': 'Bulanan'
+                    };
+                    
+                    return `
+                        <div class="card rounded-3xl p-6 shadow-xl slide-in">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-1">${saving.name}</h3>
+                                    <p class="text-sm text-gray-600">
+                                        <i class="fas fa-calendar mr-1"></i>${periodText[saving.period]} - Rp ${formatNumber(saving.amount)}
+                                    </p>
+                                </div>
+                                <button onclick="deleteSaving(${saving.id})" class="text-red-500 hover:text-red-700">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-600">Progress</span>
+                                    <span class="font-semibold text-coral-red">${progress.toFixed(1)}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="progress-bar gradient-bg h-3 rounded-full" style="width: ${Math.min(progress, 100)}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Terkumpul</p>
+                                    <p class="text-lg font-bold text-gray-800">Rp ${formatNumber(saving.current)}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-600">Target</p>
+                                    <p class="text-lg font-bold text-coral-red">Rp ${formatNumber(saving.target)}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <button onclick="openAddMoneyModal(${saving.id})" class="flex-1 gradient-bg text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-all">
+                                    <i class="fas fa-plus mr-2"></i>Tambah
+                                </button>
+                                <button onclick="viewSavingDetail(${saving.id})" class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-all">
+                                    <i class="fas fa-eye mr-2"></i>Detail
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function openAddMoneyModal(id) {
+            document.getElementById('selectedSavingId').value = id;
+            document.getElementById('addMoneyModal').classList.add('active');
+        }
+
+        function closeAddMoneyModal() {
+            document.getElementById('addMoneyModal').classList.remove('active');
+            document.getElementById('addMoneyAmount').value = '';
+        }
+
+        function addMoney(event) {
+            event.preventDefault();
+            
+            const id = parseInt(document.getElementById('selectedSavingId').value);
+            const amount = parseFloat(document.getElementById('addMoneyAmount').value) * 1000;
+            
+            const saving = savings.find(s => s.id === id);
+            if (saving) {
+                saving.current += amount;
+                if (saving.current > saving.target) {
+                    saving.current = saving.target;
+                }
+                saveSavings();
+                renderSavings();
+                updateDashboardStats();
+                closeAddMoneyModal();
+                
+                // Show success message
+                if (saving.current >= saving.target) {
+                    alert(`Selamat! Target tabungan "${saving.name}" tercapai! 🎉`);
+                } else {
+                    alert('Uang berhasil ditambahkan!');
+                }
+            }
+        }
+
+        function deleteSaving(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus tabungan ini?')) {
+                savings = savings.filter(s => s.id !== id);
+                saveSavings();
+                renderSavings();
+                updateDashboardStats();
+            }
+        }
+
+        function viewSavingDetail(id) {
+            const saving = savings.find(s => s.id === id);
+            if (saving) {
+                const periodText = {
+                    'daily': 'per hari',
+                    'weekly': 'per minggu',
+                    'monthly': 'per bulan'
+                };
+                
+                const remaining = saving.target - saving.current;
+                const periodsNeeded = Math.ceil(remaining / saving.amount);
+                
+                alert(`Detail Tabungan: ${saving.name}\n\n` +
+                      `Target: Rp ${formatNumber(saving.target)}\n` +
+                      `Terkumpul: Rp ${formatNumber(saving.current)}\n` +
+                      `Sisa: Rp ${formatNumber(remaining)}\n\n` +
+                      `Menabung Rp ${formatNumber(saving.amount)} ${periodText[saving.period]}\n` +
+                      `Estimasi waktu: ${periodsNeeded} periode lagi`);
+            }
+        }
+
+        function updateDashboardStats() {
+            const total = savings.reduce((sum, s) => sum + s.current, 0);
+            const completed = savings.filter(s => s.current >= s.target).length;
+            const ongoing = savings.filter(s => s.current < s.target).length;
+            
+            document.getElementById('totalSavings').textContent = `Rp ${formatNumber(total)}`;
+            document.getElementById('completedGoals').textContent = completed;
+            document.getElementById('ongoingGoals').textContent = ongoing;
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('id-ID').format(num);
+        }
+
+        function logout() {
+            if (confirm('Apakah Anda yakin ingin keluar?')) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+// Image Slider
+        let currentSlide = 0;
+        let slideInterval;
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function initSlider() {
+            const slider = document.getElementById('imageSlider');
+            const wrapper = document.getElementById('sliderWrapper');
+            const dotsContainer = document.getElementById('sliderDots');
+            const slides = wrapper.querySelectorAll('.slider-item');
+            
+            // Create dots
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = `slider-dot ${index === 0 ? 'active' : ''}`;
+                dot.onclick = () => goToSlide(index);
+                dotsContainer.appendChild(dot);
+            });
+            
+            // Touch events for swipe
+            slider.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            slider.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            // Mouse events for desktop swipe
+            slider.addEventListener('mousedown', (e) => {
+                touchStartX = e.screenX;
+                slider.style.cursor = 'grabbing';
+            });
+            
+            slider.addEventListener('mouseup', (e) => {
+                touchEndX = e.screenX;
+                handleSwipe();
+                slider.style.cursor = 'grab';
+            });
+            
+            // Start auto slide
+            startAutoSlide();
+            
+            // Pause on hover
+            slider.addEventListener('mouseenter', stopAutoSlide);
+            slider.addEventListener('mouseleave', startAutoSlide);
+        }
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                nextSlide();
+            }
+            if (touchEndX > touchStartX + 50) {
+                prevSlide();
+            }
+        }
+
+        function goToSlide(index) {
+            const wrapper = document.getElementById('sliderWrapper');
+            const dots = document.querySelectorAll('.slider-dot');
+            const slides = wrapper.querySelectorAll('.slider-item');
+            
+            currentSlide = index;
+            wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentSlide);
+            });
+        }
+
+        function nextSlide() {
+            const slides = document.querySelectorAll('.slider-item');
+            currentSlide = (currentSlide + 1) % slides.length;
+            goToSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            const slides = document.querySelectorAll('.slider-item');
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            goToSlide(currentSlide);
+        }
+
+        function startAutoSlide() {
+            slideInterval = setInterval(nextSlide, 4000);
+        }
+
+        function stopAutoSlide() {
+            clearInterval(slideInterval);
+        }
+
+        // Initialize slider on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initSlider();
+            loadSavings();
+            updateDashboardStats();
+            updateCurrentDate();
+            renderSavings();
+        });
+    </script>
+</body>
+</html>
